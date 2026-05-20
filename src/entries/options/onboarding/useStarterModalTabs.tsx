@@ -115,10 +115,10 @@ const useStarterModalTabs = () => {
         </Stack>
       </>,
       <>
-        <h2>Want to set your own hours?</h2>
+        <h2>Tip: Want to set your own hours?</h2>
         <Stack gap='x-small'>
           <Paragraph>
-            You can set a blocking schedule any time in the <strong>Schedule</strong> tab.{' '}
+            You can set a blocking schedule any time in the <strong>Schedule</strong> tab.
           </Paragraph>
           <br />
           {settings ? (
@@ -127,7 +127,9 @@ const useStarterModalTabs = () => {
                 userSelect: 'none',
                 pointerEvents: 'none',
                 cursor: 'default',
-                filter: 'drop-shadow(4px 4px 3px rgba(0, 0, 0, 0.1))',
+                filter: 'drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.1))',
+                scale: '0.9',
+                marginInline: '-10px',
               }}
             >
               <SchedulingWindow
