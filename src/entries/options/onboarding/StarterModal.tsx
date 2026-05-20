@@ -60,6 +60,7 @@ const StarterModal = ({ close, dialogRef }: { dialogRef: Ref<HTMLDialogElement>;
           <Button
             variant='ghost'
             onClick={close}
+            title='Close walkthrough'
           >
             <X />
           </Button>
