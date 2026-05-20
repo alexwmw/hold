@@ -100,7 +100,7 @@ const PopupApp = () => {
       return 'This page is temporarily unblocked';
     }
     if (!isBlockingTime && matchingRules.length > 0) {
-      return 'This page will be blocked when schedule starts';
+      return 'This page is blocked during scheduled hours';
     }
     return null;
   }, [isBlockingTime, isSupported, matchingRules.length, matchingTemporarilyUnblockedRules.length]);
