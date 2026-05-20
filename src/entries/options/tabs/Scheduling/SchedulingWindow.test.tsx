@@ -18,7 +18,7 @@ describe('SchedulingWindow', () => {
 
     render(
       <SchedulingWindow
-        window={windowData}
+        scheduleWindow={windowData}
         windowIndex={0}
         disabled={false}
         removeWindow={vi.fn(async () => {})}
@@ -28,14 +28,35 @@ describe('SchedulingWindow', () => {
 
     const startInput = screen.getByLabelText('Start time') as HTMLInputElement;
 
-    fireEvent.change(startInput, { target: { value: '19:19' } });
+    fireEvent.change(startInput, { target: { value: '16:19' } });
 
-    expect(startInput.value).toBe('19:19');
+    expect(startInput.value).toBe('16:19');
     expect(updateWindow).not.toHaveBeenCalled();
 
     fireEvent.blur(startInput);
 
     expect(updateWindow).toHaveBeenCalledTimes(1);
-    expect(updateWindow).toHaveBeenCalledWith({ start: '19:19' });
+    expect(updateWindow).toHaveBeenCalledWith({ start: '16:19', end: '17:00' });
+  });
+
+  it('blocks persistence when end time is earlier than start time', () => {
+    const updateWindow = vi.fn(async () => {});
+
+    render(
+      <SchedulingWindow
+        scheduleWindow={windowData}
+        windowIndex={0}
+        disabled={false}
+        removeWindow={vi.fn(async () => {})}
+        updateWindow={updateWindow}
+      />,
+    );
+
+    const endInput = screen.getByLabelText('End time') as HTMLInputElement;
+
+    fireEvent.change(endInput, { target: { value: '08:00' } });
+    fireEvent.blur(endInput);
+
+    expect(updateWindow).not.toHaveBeenCalled();
   });
 });

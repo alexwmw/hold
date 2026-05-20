@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { TriangleAlert } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import styles from './Setting.module.css';
@@ -11,6 +12,7 @@ type BaseProps = {
   fieldHint?: string;
   settingId: string;
   variant?: string;
+  hasError?: boolean;
 };
 
 type SelectProps = BaseProps & {
@@ -49,15 +51,25 @@ const Select = ({
 };
 
 const Setting = (props: SettingProps) => {
-  const { settingId, className, label, fieldHint, options, variant, as, ...inputProps } = props;
+  const { settingId, className, label, fieldHint, options, variant, hasError, as, ...inputProps } = props;
   const describedById = settingId + '-field-hint';
+  const labelId = settingId + '-label';
   return (
     <div>
       <label
+        id={labelId}
         htmlFor={settingId}
-        className={clsx(styles.settingsLabel, className, variant && styles[variant])}
+        className={clsx(styles.settingsLabel, className, variant && styles[variant], hasError && styles.hasError)}
       >
-        {label}
+        <span>
+          {hasError ? (
+            <TriangleAlert
+              height='14'
+              style={{ marginBottom: '-3px' }}
+            />
+          ) : null}
+          {label}
+        </span>
 
         {as === 'select' ? (
           <Select
