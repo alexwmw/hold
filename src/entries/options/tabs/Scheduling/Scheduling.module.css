@@ -78,3 +78,15 @@
   flex-wrap: wrap;
   gap: 8px;
 }
+
+.saveStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-tertiary);
+
+  svg:global(.lucide) {
+    height: 12px;
+    width: 12px;
+  }
+}
