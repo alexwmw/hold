@@ -134,7 +134,7 @@ const useStarterModalTabs = () => {
             >
               <SchedulingWindow
                 scheduleWindow={settings.schedule.windows[0]}
-                disabled={false}
+                disabled={true}
                 windowIndex={0}
                 removeWindow={async () => {}}
                 updateWindow={async () => {}}
