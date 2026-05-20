@@ -18,7 +18,7 @@ describe('SchedulingWindow', () => {
 
     render(
       <SchedulingWindow
-        window={windowData}
+        scheduleWindow={windowData}
         windowIndex={0}
         disabled={false}
         removeWindow={vi.fn(async () => {})}
@@ -36,15 +36,15 @@ describe('SchedulingWindow', () => {
     fireEvent.blur(startInput);
 
     expect(updateWindow).toHaveBeenCalledTimes(1);
-    expect(updateWindow).toHaveBeenCalledWith({ start: '16:19' });
+    expect(updateWindow).toHaveBeenCalledWith({ start: '16:19', end: '17:00' });
   });
 
-  it('shows a validation error and blocks persistence when end time is earlier than start time', () => {
+  it('blocks persistence when end time is earlier than start time', () => {
     const updateWindow = vi.fn(async () => {});
 
     render(
       <SchedulingWindow
-        window={windowData}
+        scheduleWindow={windowData}
         windowIndex={0}
         disabled={false}
         removeWindow={vi.fn(async () => {})}
@@ -58,6 +58,5 @@ describe('SchedulingWindow', () => {
     fireEvent.blur(endInput);
 
     expect(updateWindow).not.toHaveBeenCalled();
-    expect(screen.getByText('End time must be later than start time.')).toBeTruthy();
   });
 });

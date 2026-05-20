@@ -1,5 +1,7 @@
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import { BanIcon, Circle, CircleCheck } from 'lucide-react';
+import type { FocusEvent } from 'react';
+import { useState } from 'react';
 
 import styles from './Scheduling.module.css';
 
@@ -10,34 +12,41 @@ import { SchedulingDays, SchedulingDaysPresetButtons } from '@/entries/options/t
 import type { ScheduleWindow } from '@/types/schema';
 
 type SchedulingWindowProps = {
-  window: ScheduleWindow;
+  scheduleWindow: ScheduleWindow;
   disabled: boolean;
   windowIndex: number;
   removeWindow: () => Promise<void>;
   updateWindow: (update: Partial<ScheduleWindow>) => Promise<void>;
 };
 
-const SchedulingWindow = ({ window, windowIndex, disabled, removeWindow, updateWindow }: SchedulingWindowProps) => {
-  const [startValue, setStartValue] = useState(window.start);
-  const [endValue, setEndValue] = useState(window.end);
-  const [timeError, setTimeError] = useState<string | null>(null);
+const SchedulingWindow = ({
+  scheduleWindow,
+  windowIndex,
+  disabled,
+  removeWindow,
+  updateWindow,
+}: SchedulingWindowProps) => {
+  const [startValue, setStartValue] = useState(scheduleWindow.start);
+  const [endValue, setEndValue] = useState(scheduleWindow.end);
 
-  useEffect(() => {
-    setStartValue(window.start);
-    setEndValue(window.end);
-    setTimeError(null);
-  }, [window.start, window.end]);
+  const startId = 'windowStart' + windowIndex;
+  const endId = 'windowEnd' + windowIndex;
+  const isRangeValid = startValue < endValue;
+  const isSaved = scheduleWindow.start === startValue && scheduleWindow.end === endValue;
 
-  const isRangeValid = (start: string, end: string) => start < end;
-
-  const validateRange = (start: string, end: string): boolean => {
-    if (!isRangeValid(start, end)) {
-      setTimeError('End time must be later than start time.');
-      return false;
+  const handleTimeInputBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const nextFocusedId = (e.relatedTarget as HTMLElement | null)?.id;
+    // Do nothing if switching focus between the start and end input
+    if (nextFocusedId === startId || nextFocusedId === endId) {
+      return;
     }
-
-    setTimeError(null);
-    return true;
+    if (!isRangeValid) {
+      return;
+    }
+    if (startValue === scheduleWindow.start && endValue === scheduleWindow.end) {
+      return;
+    }
+    updateWindow({ start: startValue, end: endValue }).catch(console.error);
   };
 
   return (
@@ -49,7 +58,7 @@ const SchedulingWindow = ({ window, windowIndex, disabled, removeWindow, updateW
         <div>
           <strong>Schedule {windowIndex + 1}</strong>
         </div>
-        {window.id !== '_initial' ? (
+        {scheduleWindow.id !== '_initial' ? (
           <Button
             variant='danger'
             disabled={disabled}
@@ -66,59 +75,48 @@ const SchedulingWindow = ({ window, windowIndex, disabled, removeWindow, updateW
         <SchedulingDaysPresetButtons
           disabled={disabled}
           updateWindow={updateWindow}
-          days={window.days}
+          days={scheduleWindow.days}
         />
         <SchedulingDays
-          days={window.days}
+          days={scheduleWindow.days}
           disabled={disabled}
           updateWindow={updateWindow}
-          windowId={window.id}
+          windowId={scheduleWindow.id}
         />
       </div>
       <div className={styles.scheduleWindowStart}>
         <Setting
-          settingId='startTime'
+          settingId={startId}
           label='Start time'
           type='time'
           value={startValue}
           disabled={disabled}
           onChange={(event) => {
-            const nextStart = event.target.value;
-            setStartValue(nextStart);
-            validateRange(nextStart, endValue);
+            setStartValue(event.target.value);
           }}
-          onBlur={() => {
-            if (!validateRange(startValue, endValue)) {
-              return;
-            }
-            if (startValue !== window.start) {
-              updateWindow({ start: startValue }).catch(console.error);
-            }
-          }}
+          onBlur={handleTimeInputBlur}
+          hasError={!isRangeValid}
+          fieldHint={'Must be earlier than end time.'}
         />
       </div>
       <div className={styles.scheduleWindowEnd}>
         <Setting
-          settingId='endTime'
+          settingId={endId}
           label='End time'
           type='time'
           value={endValue}
           disabled={disabled}
           onChange={(event) => {
-            const nextEnd = event.target.value;
-            setEndValue(nextEnd);
-            validateRange(startValue, nextEnd);
+            setEndValue(event.target.value);
           }}
-          onBlur={() => {
-            if (!validateRange(startValue, endValue)) {
-              return;
-            }
-            if (endValue !== window.end) {
-              updateWindow({ end: endValue }).catch(console.error);
-            }
-          }}
-          fieldHint={timeError ?? undefined}
+          onBlur={handleTimeInputBlur}
+          hasError={!isRangeValid}
+          fieldHint={'Must be later than start time.'}
         />
+      </div>
+      <div className={styles.saveStatus}>
+        {isSaved ? <CircleCheck /> : !isRangeValid ? <BanIcon /> : <Circle />}
+        <span aria-hidden='true'>{isSaved ? 'Saved' : !isRangeValid ? 'Errors' : 'Unsaved'}</span>
       </div>
     </Card>
   );

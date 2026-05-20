@@ -78,7 +78,7 @@ const Scheduling = ({
         {schedule.windows.map((win, index) => (
           <li key={win.id}>
             <SchedulingWindow
-              window={win}
+              scheduleWindow={win}
               disabled={!schedule.enabled}
               windowIndex={index}
               removeWindow={() => removeScheduleWindow(win.id)}
