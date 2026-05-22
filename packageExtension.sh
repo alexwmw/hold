@@ -23,7 +23,7 @@ rm -f "$ZIP_DIR/$ZIP_NAME"
 
 # Remove Mac OS hidden files
 find "$DIST_DIR" -name ".DS_Store" -delete
-find "$DIST_DIR" -name "__MACOSX" -delete
+find "$DIST_DIR" -type d -name "__MACOSX" -exec rm -rf {} +
 
 cd "$DIST_DIR"
 
