@@ -14,13 +14,13 @@ describe('SiteIdentityService', () => {
   it('derives host and path from a rule using the canonical split pattern', () => {
     const identity = SiteIdentityService.fromRule({ pattern: 'https://www.Reddit.com/r/typescript/?sort=top' });
 
-    expect(identity.host).toBe('reddit.com');
+    expect(identity.host).toBe('www.reddit.com');
     expect(identity.path).toBe('/r/typescript?sort=top');
-    expect(identity.label).toBe('reddit.com/r/typescript?sort=top');
+    expect(identity.label).toBe('www.reddit.com/r/typescript?sort=top');
     expect(identity.faviconSources).toEqual([
-      'chrome-extension://test/_favicon/?pageUrl=https%3A%2F%2Freddit.com%2Fr%2Ftypescript%3Fsort%3Dtop&size=64',
-      'https://www.google.com/s2/favicons?domain=reddit.com&sz=64',
-      'https://reddit.com/favicon.ico',
+      'chrome-extension://test/_favicon/?pageUrl=https%3A%2F%2Fwww.reddit.com%2Fr%2Ftypescript%3Fsort%3Dtop&size=64',
+      'https://www.google.com/s2/favicons?domain=www.reddit.com&sz=64',
+      'https://www.reddit.com/favicon.ico',
     ]);
   });
 

@@ -29,29 +29,32 @@ describe('BlockService', () => {
     expect(RulesService.isSupportedUrl('chrome://extensions')).toBe(false);
   });
 
-  it('ruleMatchesUrl with prefix matches exact page, subdomains, and descendants', () => {
+  it('ruleMatchesUrl with prefix matches exact page, www host, and descendants', () => {
     const rule = makeRule({ pattern: 'reddit.com/r/aita', matchType: 'prefix' });
 
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com/r/aita')).toBe(true);
     expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/comments/123')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita/comments/123')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/comments/123')).toBe(false);
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com/r/askreddit')).toBe(false);
   });
 
   it('ruleMatchesUrl with exact matches only the exact page (slash-insensitive)', () => {
     const rule = makeRule({ pattern: 'reddit.com/r/aita', matchType: 'exact' });
 
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/comments/123')).toBe(false);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita/')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita')).toBe(false);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita/comments/123')).toBe(false);
   });
 
-  it('ruleMatchesUrl with prefix and domain-only pattern is site-wide', () => {
+  it('ruleMatchesUrl with prefix and domain-only pattern matches apex and www host', () => {
     const rule = makeRule({ pattern: 'reddit.com', matchType: 'prefix' });
 
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com')).toBe(true);
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com/r/programming')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/all')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/all')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/all')).toBe(false);
     expect(RulesService.ruleMatchesUrl(rule, 'https://example.com')).toBe(false);
   });
 
@@ -95,11 +98,11 @@ describe('BlockService', () => {
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com')).toBe(false);
   });
 
-  it('normaliseRulePattern normalises case, www, slash, keeps query, and drops hash', () => {
+  it('normaliseRulePattern normalises case, slash, keeps host label/query, and drops hash', () => {
     expect(RulesService.normaliseRulePattern('WWW.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
-      'reddit.com/r/typescript?Sort=top',
+      'www.reddit.com/r/typescript?Sort=top',
     );
-    expect(RulesService.normaliseRulePattern('https://www.Reddit.com/?Sort=top#today')).toBe('reddit.com?Sort=top');
+    expect(RulesService.normaliseRulePattern('https://www.Reddit.com/?Sort=top#today')).toBe('www.reddit.com?Sort=top');
   });
 
   it('normaliseRulePattern canonicalises query parameter order for duplicate detection', () => {
@@ -115,7 +118,9 @@ describe('BlockService', () => {
   });
 
   it('patternFromUrl builds normalised page pattern from current tab URL', () => {
-    expect(RulesService.patternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('reddit.com/r/typescript');
+    expect(RulesService.patternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
+      'www.reddit.com/r/typescript',
+    );
     expect(RulesService.patternFromUrl('https://example.com/search?q=react&source=hp')).toBe('example.com/search?q=react');
     expect(RulesService.patternFromUrl('https://example.com/search?query=react')).toBe('example.com/search');
     expect(RulesService.patternFromUrl('https://example.com/view?id=123&tab=info')).toBe('example.com/view?id=123');
@@ -131,7 +136,7 @@ describe('BlockService', () => {
 
   it('pathPatternFromUrl builds normalised page pattern from current tab URL', () => {
     expect(RulesService.pathPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
-      'reddit.com/r/typescript',
+      'www.reddit.com/r/typescript',
     );
     expect(RulesService.pathPatternFromUrl('https://example.com/search?q=react&source=hp')).toBe('example.com/search?q=react');
     expect(RulesService.pathPatternFromUrl('https://example.com/search?query=react')).toBe('example.com/search');
@@ -147,7 +152,7 @@ describe('BlockService', () => {
   });
 
   it('domainPatternFromUrl builds normalised domain pattern from current tab URL', () => {
-    expect(RulesService.domainPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('reddit.com');
+    expect(RulesService.domainPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('www.reddit.com');
     expect(RulesService.domainPatternFromUrl('chrome://extensions')).toBeNull();
   });
 
@@ -157,7 +162,7 @@ describe('BlockService', () => {
       makeRule({ id: 'rule-2', pattern: 'reddit.com/r/all', matchType: 'prefix' }),
     ];
 
-    const matches = RulesService.findMatchingRules('https://old.reddit.com/r/all/comments/x', rules);
+    const matches = RulesService.findMatchingRules('https://www.reddit.com/r/all/comments/x', rules);
 
     expect(matches[0].id).toBe('rule-2');
   });
@@ -166,10 +171,10 @@ describe('BlockService', () => {
     const rules: BlockRule[] = [
       makeRule({ id: 'rule-1', pattern: 'news.ycombinator.com', matchType: 'prefix' }),
       makeRule({ id: 'rule-2', pattern: 'reddit.com/r/all', matchType: 'prefix' }),
-      makeRule({ id: 'rule-3', pattern: 'https://old.reddit.com/r/all/comments/x', matchType: 'exact' }),
+      makeRule({ id: 'rule-3', pattern: 'https://www.reddit.com/r/all/comments/x', matchType: 'exact' }),
     ];
 
-    const matches = RulesService.findMatchingRules('https://old.reddit.com/r/all/comments/x', rules);
+    const matches = RulesService.findMatchingRules('https://www.reddit.com/r/all/comments/x', rules);
 
     expect(matches).toHaveLength(2);
     expect(matches[0].id).toBe('rule-2');
@@ -191,7 +196,7 @@ describe('BlockService', () => {
       matchType: 'prefix',
     });
     const rules: BlockRule[] = [
-      makeRule({ id: 'rule-1', pattern: 'reddit.com/r/typescript?a=1&b=2', matchType: 'exact' }),
+      makeRule({ id: 'rule-1', pattern: 'www.reddit.com/r/typescript?a=1&b=2', matchType: 'exact' }),
       makeRule({ id: 'rule-2', pattern: 'news.ycombinator.com', matchType: 'prefix' }),
     ];
 
@@ -199,5 +204,24 @@ describe('BlockService', () => {
 
     expect(duplicates).toHaveLength(1);
     expect(duplicates[0].id).toBe('rule-1');
+  });
+
+  it('ruleMatchesUrl does not match sibling subdomains for host-specific site rules', () => {
+    const wwwRule = makeRule({ pattern: 'www.youtube.com', matchType: 'prefix' });
+    const musicRule = makeRule({ pattern: 'music.youtube.com', matchType: 'prefix' });
+
+    expect(RulesService.ruleMatchesUrl(wwwRule, 'https://www.youtube.com/watch?v=aaa')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(wwwRule, 'https://music.youtube.com/watch?v=aaa')).toBe(false);
+    expect(RulesService.ruleMatchesUrl(musicRule, 'https://music.youtube.com/watch?v=aaa')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(musicRule, 'https://www.youtube.com/watch?v=aaa')).toBe(false);
+  });
+
+  it('findDuplicateRules treats www and apex hosts as distinct', () => {
+    const compareRule = makeRule({ id: 'rule-new', pattern: 'www.youtube.com', matchType: 'prefix' });
+    const rules: BlockRule[] = [makeRule({ id: 'rule-1', pattern: 'youtube.com', matchType: 'prefix' })];
+
+    const duplicates = RulesService.findDuplicateRules(compareRule, rules);
+
+    expect(duplicates).toHaveLength(0);
   });
 });

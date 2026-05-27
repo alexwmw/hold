@@ -19,7 +19,7 @@ export function stripWww(host: string): string {
 }
 
 export function normaliseHost(host: string): string {
-  return stripWww(host.trim().toLowerCase());
+  return host.trim().toLowerCase();
 }
 
 export function normalisePathSegment(pathname: string): string {
@@ -47,5 +47,9 @@ export function parseLooseHostPathAndSearch(rawInput: string): { host: string; p
 }
 
 export function isHostMatch(targetHost: string, patternHost: string): boolean {
-  return targetHost === patternHost || targetHost.endsWith(`.${patternHost}`);
+  if (targetHost === patternHost) {
+    return true;
+  }
+
+  return targetHost === `www.${patternHost}`;
 }

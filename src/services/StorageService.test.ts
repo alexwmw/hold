@@ -109,10 +109,10 @@ describe('StorageService', () => {
     expect(setCall.rules[1]).toStrictEqual(newRule);
   });
 
-  it('should reject a duplicate rule when canonical pattern already exists', async () => {
+  it('treats www and apex hosts as distinct rules for duplicate detection', async () => {
     const existingRule: BlockRule = {
       id: '1',
-      pattern: 'https://www.Reddit.com/r/typescript/?sort=top',
+      pattern: 'https://www.Reddit.com/r/typescript',
       matchType: 'exact',
       createdAt: new Date().toISOString(),
       enabled: true,
@@ -128,10 +128,11 @@ describe('StorageService', () => {
 
     const result = await StorageService.addRule(newRule);
 
-    expect(result.ok).toBe(false);
-    expect(result.reason).toBe('Duplicate rule(s) exist');
-    expect(result.duplicateRules).toStrictEqual([existingRule]);
-    expect(storageMock.local.set).not.toHaveBeenCalled();
+    expect(result).toStrictEqual({ ok: true });
+    const [[setCall]] = storageMock.local.set.mock.calls;
+    expect(setCall.rules).toHaveLength(2);
+    expect(setCall.rules[0]).toStrictEqual(existingRule);
+    expect(setCall.rules[1]).toStrictEqual(newRule);
   });
 
   it('should allow overlapping schedule updates', async () => {
