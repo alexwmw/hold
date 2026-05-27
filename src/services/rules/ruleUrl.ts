@@ -47,5 +47,9 @@ export function parseLooseHostPathAndSearch(rawInput: string): { host: string; p
 }
 
 export function isHostMatch(targetHost: string, patternHost: string): boolean {
-  return targetHost === patternHost || targetHost.endsWith(`.${patternHost}`);
+  if (targetHost === patternHost) {
+    return true;
+  }
+
+  return targetHost === `www.${patternHost}`;
 }

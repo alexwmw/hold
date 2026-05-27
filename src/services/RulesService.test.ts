@@ -29,29 +29,32 @@ describe('BlockService', () => {
     expect(RulesService.isSupportedUrl('chrome://extensions')).toBe(false);
   });
 
-  it('ruleMatchesUrl with prefix matches exact page, subdomains, and descendants', () => {
+  it('ruleMatchesUrl with prefix matches exact page, www host, and descendants', () => {
     const rule = makeRule({ pattern: 'reddit.com/r/aita', matchType: 'prefix' });
 
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com/r/aita')).toBe(true);
     expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/comments/123')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita/comments/123')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/comments/123')).toBe(false);
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com/r/askreddit')).toBe(false);
   });
 
   it('ruleMatchesUrl with exact matches only the exact page (slash-insensitive)', () => {
     const rule = makeRule({ pattern: 'reddit.com/r/aita', matchType: 'exact' });
 
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita/comments/123')).toBe(false);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita/')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/aita')).toBe(false);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/aita/comments/123')).toBe(false);
   });
 
-  it('ruleMatchesUrl with prefix and domain-only pattern is site-wide', () => {
+  it('ruleMatchesUrl with prefix and domain-only pattern matches apex and www host', () => {
     const rule = makeRule({ pattern: 'reddit.com', matchType: 'prefix' });
 
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com')).toBe(true);
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com/r/programming')).toBe(true);
-    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/all')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://www.reddit.com/r/all')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(rule, 'https://old.reddit.com/r/all')).toBe(false);
     expect(RulesService.ruleMatchesUrl(rule, 'https://example.com')).toBe(false);
   });
 
@@ -159,7 +162,7 @@ describe('BlockService', () => {
       makeRule({ id: 'rule-2', pattern: 'reddit.com/r/all', matchType: 'prefix' }),
     ];
 
-    const matches = RulesService.findMatchingRules('https://old.reddit.com/r/all/comments/x', rules);
+    const matches = RulesService.findMatchingRules('https://www.reddit.com/r/all/comments/x', rules);
 
     expect(matches[0].id).toBe('rule-2');
   });
@@ -168,10 +171,10 @@ describe('BlockService', () => {
     const rules: BlockRule[] = [
       makeRule({ id: 'rule-1', pattern: 'news.ycombinator.com', matchType: 'prefix' }),
       makeRule({ id: 'rule-2', pattern: 'reddit.com/r/all', matchType: 'prefix' }),
-      makeRule({ id: 'rule-3', pattern: 'https://old.reddit.com/r/all/comments/x', matchType: 'exact' }),
+      makeRule({ id: 'rule-3', pattern: 'https://www.reddit.com/r/all/comments/x', matchType: 'exact' }),
     ];
 
-    const matches = RulesService.findMatchingRules('https://old.reddit.com/r/all/comments/x', rules);
+    const matches = RulesService.findMatchingRules('https://www.reddit.com/r/all/comments/x', rules);
 
     expect(matches).toHaveLength(2);
     expect(matches[0].id).toBe('rule-2');
