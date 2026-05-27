@@ -104,9 +104,9 @@ describe('BlockService', () => {
 
   it('normaliseRulePattern normalises case, slash, keeps query, and drops hash', () => {
     expect(RulesService.normaliseRulePattern('WWW.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
-      'www.reddit.com/r/typescript?Sort=top',
+      'reddit.com/r/typescript?Sort=top',
     );
-    expect(RulesService.normaliseRulePattern('https://www.Reddit.com/?Sort=top#today')).toBe('www.reddit.com?Sort=top');
+    expect(RulesService.normaliseRulePattern('https://www.Reddit.com/?Sort=top#today')).toBe('reddit.com?Sort=top');
   });
 
   it('normaliseRulePattern canonicalises query parameter order for duplicate detection', () => {
@@ -123,7 +123,7 @@ describe('BlockService', () => {
 
   it('patternFromUrl builds normalised page pattern from current tab URL', () => {
     expect(RulesService.patternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
-      'www.reddit.com/r/typescript',
+      'reddit.com/r/typescript',
     );
     expect(RulesService.patternFromUrl('https://example.com/search?q=react&source=hp')).toBe('example.com/search?q=react');
     expect(RulesService.patternFromUrl('https://example.com/search?query=react')).toBe('example.com/search');
@@ -140,7 +140,7 @@ describe('BlockService', () => {
 
   it('pathPatternFromUrl builds normalised page pattern from current tab URL', () => {
     expect(RulesService.pathPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
-      'www.reddit.com/r/typescript',
+      'reddit.com/r/typescript',
     );
     expect(RulesService.pathPatternFromUrl('https://example.com/search?q=react&source=hp')).toBe('example.com/search?q=react');
     expect(RulesService.pathPatternFromUrl('https://example.com/search?query=react')).toBe('example.com/search');
@@ -156,7 +156,7 @@ describe('BlockService', () => {
   });
 
   it('domainPatternFromUrl builds normalised domain pattern from current tab URL', () => {
-    expect(RulesService.domainPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('www.reddit.com');
+    expect(RulesService.domainPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('reddit.com');
     expect(RulesService.domainPatternFromUrl('chrome://extensions')).toBeNull();
   });
 
@@ -200,7 +200,7 @@ describe('BlockService', () => {
       matchType: 'prefix',
     });
     const rules: BlockRule[] = [
-      makeRule({ id: 'rule-1', pattern: 'www.reddit.com/r/typescript?a=1&b=2', matchType: 'exact' }),
+      makeRule({ id: 'rule-1', pattern: 'reddit.com/r/typescript?a=1&b=2', matchType: 'exact' }),
       makeRule({ id: 'rule-2', pattern: 'news.ycombinator.com', matchType: 'prefix' }),
     ];
 

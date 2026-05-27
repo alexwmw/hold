@@ -1,6 +1,6 @@
 import { normalisePatternForDuplicateDetection, normalisePatternParts, normalisedTargetParts } from './rulePattern';
 import { QUERY_PARAM_SEPARATOR } from './ruleQuery';
-import { isHostMatch, isSupportedUrl } from './ruleUrl';
+import { isHostMatch, isSupportedUrl, parseLooseHostPathAndSearch, parseSupportedUrl } from './ruleUrl';
 
 import type { BlockRule } from '@/types/schema';
 
@@ -31,8 +31,20 @@ export function ruleMatchesUrl(rule: BlockRule, targetUrl: string): boolean {
     return false;
   }
 
+  const targetUrlObj = new URL(targetUrl);
+  const targetHostStrict = targetUrlObj.hostname.trim().toLowerCase();
   const target = normalisedTargetParts(targetUrl);
   const pattern = normalisePatternParts(rule.pattern);
+  const parsedRuleUrl = parseSupportedUrl(rule.pattern);
+  const { host: looseRuleHost } = parseLooseHostPathAndSearch(rule.pattern);
+  const ruleHostStrict = (parsedRuleUrl?.hostname ?? looseRuleHost).trim().toLowerCase();
+
+  if (ruleHostStrict.startsWith('www.')) {
+    const strictHostMatch = targetHostStrict === ruleHostStrict || targetHostStrict.endsWith(`.${ruleHostStrict}`);
+    if (!strictHostMatch) {
+      return false;
+    }
+  }
 
   if (!isHostMatch(target.host, pattern.host)) {
     return false;

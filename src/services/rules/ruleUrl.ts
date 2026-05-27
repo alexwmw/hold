@@ -19,7 +19,7 @@ export function stripWww(host: string): string {
 }
 
 export function normaliseHost(host: string): string {
-  return host.trim().toLowerCase();
+  return stripWww(host.trim().toLowerCase());
 }
 
 export function normalisePathSegment(pathname: string): string {
