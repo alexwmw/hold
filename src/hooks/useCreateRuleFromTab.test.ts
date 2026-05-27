@@ -40,7 +40,7 @@ describe('useCreateRuleFromActiveTab', () => {
     expect(chromeMock.tabs.query).not.toHaveBeenCalled();
     expect(result.current.error).toBeNull();
     expect(result.current.isResolved).toBe(true);
-    expect(result.current.createDomainPrefixRule()?.pattern).toBe('theguardian.com');
+    expect(result.current.createDomainPrefixRule()?.pattern).toBe('www.theguardian.com');
   });
 
   it('does not query tabs when a provided tab is unsupported', async () => {
@@ -134,8 +134,8 @@ describe('useCreateRuleFromActiveTab', () => {
 
     expect(exactRule?.matchType).toBe('exact');
     expect(prefixRule?.matchType).toBe('prefix');
-    expect(exactRule?.pattern).toBe('reddit.com/r/aita');
-    expect(prefixRule?.pattern).toBe('reddit.com/r/aita');
+    expect(exactRule?.pattern).toBe('www.reddit.com/r/aita');
+    expect(prefixRule?.pattern).toBe('www.reddit.com/r/aita');
     expect(exactRule?.enabled).toBe(true);
   });
 
@@ -163,7 +163,7 @@ describe('useCreateRuleFromActiveTab', () => {
     const rule = result.current.createDomainPrefixRule();
 
     expect(rule?.matchType).toBe('prefix');
-    expect(rule?.pattern).toBe('reddit.com');
+    expect(rule?.pattern).toBe('www.reddit.com');
   });
 
   it('returns null rules for unsupported tab URLs', async () => {

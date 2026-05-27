@@ -95,11 +95,11 @@ describe('BlockService', () => {
     expect(RulesService.ruleMatchesUrl(rule, 'https://reddit.com')).toBe(false);
   });
 
-  it('normaliseRulePattern normalises case, www, slash, keeps query, and drops hash', () => {
+  it('normaliseRulePattern normalises case, slash, keeps host label/query, and drops hash', () => {
     expect(RulesService.normaliseRulePattern('WWW.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
-      'reddit.com/r/typescript?Sort=top',
+      'www.reddit.com/r/typescript?Sort=top',
     );
-    expect(RulesService.normaliseRulePattern('https://www.Reddit.com/?Sort=top#today')).toBe('reddit.com?Sort=top');
+    expect(RulesService.normaliseRulePattern('https://www.Reddit.com/?Sort=top#today')).toBe('www.reddit.com?Sort=top');
   });
 
   it('normaliseRulePattern canonicalises query parameter order for duplicate detection', () => {
@@ -115,7 +115,9 @@ describe('BlockService', () => {
   });
 
   it('patternFromUrl builds normalised page pattern from current tab URL', () => {
-    expect(RulesService.patternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('reddit.com/r/typescript');
+    expect(RulesService.patternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
+      'www.reddit.com/r/typescript',
+    );
     expect(RulesService.patternFromUrl('https://example.com/search?q=react&source=hp')).toBe('example.com/search?q=react');
     expect(RulesService.patternFromUrl('https://example.com/search?query=react')).toBe('example.com/search');
     expect(RulesService.patternFromUrl('https://example.com/view?id=123&tab=info')).toBe('example.com/view?id=123');
@@ -131,7 +133,7 @@ describe('BlockService', () => {
 
   it('pathPatternFromUrl builds normalised page pattern from current tab URL', () => {
     expect(RulesService.pathPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe(
-      'reddit.com/r/typescript',
+      'www.reddit.com/r/typescript',
     );
     expect(RulesService.pathPatternFromUrl('https://example.com/search?q=react&source=hp')).toBe('example.com/search?q=react');
     expect(RulesService.pathPatternFromUrl('https://example.com/search?query=react')).toBe('example.com/search');
@@ -147,7 +149,7 @@ describe('BlockService', () => {
   });
 
   it('domainPatternFromUrl builds normalised domain pattern from current tab URL', () => {
-    expect(RulesService.domainPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('reddit.com');
+    expect(RulesService.domainPatternFromUrl('https://www.Reddit.com/R/Typescript/?Sort=top#today')).toBe('www.reddit.com');
     expect(RulesService.domainPatternFromUrl('chrome://extensions')).toBeNull();
   });
 
@@ -191,7 +193,7 @@ describe('BlockService', () => {
       matchType: 'prefix',
     });
     const rules: BlockRule[] = [
-      makeRule({ id: 'rule-1', pattern: 'reddit.com/r/typescript?a=1&b=2', matchType: 'exact' }),
+      makeRule({ id: 'rule-1', pattern: 'www.reddit.com/r/typescript?a=1&b=2', matchType: 'exact' }),
       makeRule({ id: 'rule-2', pattern: 'news.ycombinator.com', matchType: 'prefix' }),
     ];
 
@@ -199,5 +201,24 @@ describe('BlockService', () => {
 
     expect(duplicates).toHaveLength(1);
     expect(duplicates[0].id).toBe('rule-1');
+  });
+
+  it('ruleMatchesUrl does not match sibling subdomains for host-specific site rules', () => {
+    const wwwRule = makeRule({ pattern: 'www.youtube.com', matchType: 'prefix' });
+    const musicRule = makeRule({ pattern: 'music.youtube.com', matchType: 'prefix' });
+
+    expect(RulesService.ruleMatchesUrl(wwwRule, 'https://www.youtube.com/watch?v=aaa')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(wwwRule, 'https://music.youtube.com/watch?v=aaa')).toBe(false);
+    expect(RulesService.ruleMatchesUrl(musicRule, 'https://music.youtube.com/watch?v=aaa')).toBe(true);
+    expect(RulesService.ruleMatchesUrl(musicRule, 'https://www.youtube.com/watch?v=aaa')).toBe(false);
+  });
+
+  it('findDuplicateRules treats www and apex hosts as distinct', () => {
+    const compareRule = makeRule({ id: 'rule-new', pattern: 'www.youtube.com', matchType: 'prefix' });
+    const rules: BlockRule[] = [makeRule({ id: 'rule-1', pattern: 'youtube.com', matchType: 'prefix' })];
+
+    const duplicates = RulesService.findDuplicateRules(compareRule, rules);
+
+    expect(duplicates).toHaveLength(0);
   });
 });
